@@ -12,6 +12,7 @@ interface FinanceState {
   creditScores: CreditScore[];
 
   addTransaction: (transaction: Transaction) => Promise<void>;
+  addTransactions: (transactions: Transaction[]) => Promise<void>;
   fetchTransactions: () => Promise<void>;
   addCard: (card: Card) => Promise<void>;
   fetchCards: () => Promise<void>;
@@ -22,6 +23,8 @@ interface FinanceState {
   setSalary: (amount: number) => Promise<void>;
   fetchCreditScores: () => Promise<void>;
   updateCreditScore: (score: CreditScore) => Promise<void>;
+  updateCardUsage: (cardId: string, usagePercentage: number) => Promise<void>;
+  calculateRemainingBalance: (cardId: string) => number;
 }
 
 export const useFinanceStore = create<FinanceState>((set) => ({
@@ -47,6 +50,20 @@ export const useFinanceStore = create<FinanceState>((set) => ({
     const { error } = await supabase.from('transactions').insert([{ ...transaction, user_id: user_id }]);
     if (error) {
       console.error('Error adding transaction:', error);
+    } else {
+      await useFinanceStore.getState().fetchTransactions();
+    }
+  },
+
+  addTransactions: async (transactions) => {
+    const { user_id } = useUserStore.getState();
+    if (!user_id) return;
+
+    const transactionsWithUser = transactions.map((t) => ({ ...t, user_id }));
+    const { error } = await supabase.from('transactions').insert(transactionsWithUser);
+
+    if (error) {
+      console.error('Error adding transactions:', error);
     } else {
       await useFinanceStore.getState().fetchTransactions();
     }
@@ -148,5 +165,31 @@ export const useFinanceStore = create<FinanceState>((set) => ({
     } else {
       await useFinanceStore.getState().fetchCreditScores();
     }
+  },
+
+  updateCardUsage: async (cardId, usagePercentage) => {
+    const { user_id } = useUserStore.getState();
+    if (!user_id) return;
+
+    const { error } = await supabase.from('cards').update({ usagePercentage }).eq('id', cardId).eq('user_id', user_id);
+
+    if (error) {
+      console.error('Error updating card usage:', error);
+    } else {
+      await useFinanceStore.getState().fetchCards();
+    }
+  },
+
+  calculateRemainingBalance: (cardId: string): number => {
+    const card = useFinanceStore.getState().cards.find((c) => c.id === cardId);
+    if (!card) return 0;
+
+    const maxLimit = card.credit_limit;
+    if (maxLimit) {
+      const allowedUsage = ((card.allowed_percentage ?? 100) / 100) * maxLimit;
+      const usedAmount = ((card.usage_percentage ?? 0) / 100) * maxLimit;
+      return allowedUsage - usedAmount;
+    }
+    return 0;
   },
 }));

@@ -1,6 +1,6 @@
 export interface Transaction {
   id: string;
-  date: Date;
+  date: string;
   description: string;
   amount: number;
   category: TransactionCategory;
@@ -26,6 +26,8 @@ export interface Card {
   last_four_digits: string;
   due_date?: number;
   credit_limit?: number;
+  usage_percentage?: number;
+  allowed_percentage?: number;
 }
 
 export interface Loan {
