@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 interface UserState {
     user_id: string | null;
     fetchUserId: () => Promise<void>;
+    logout: () => Promise<void>;
 }
 
 export const useUserStore = create<UserState>((set) => ({
@@ -16,5 +17,10 @@ export const useUserStore = create<UserState>((set) => ({
         } else {
             console.error('Error fetching user ID:', error);
         }
+    },
+
+    logout: async () => {
+        await supabase.auth.signOut();
+        set({ user_id: null });
     },
 }));

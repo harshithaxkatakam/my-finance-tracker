@@ -1,14 +1,20 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { toast } from 'react-hot-toast';
 import { LogIn, UserPlus } from 'lucide-react';
+import { useUserStore } from '../store/userStore';
 
 const Auth: React.FC = () => {
+  const { fetchUserId } = useUserStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
 
+  useEffect(() => {
+    fetchUserId();
+  }, [fetchUserId]);
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);

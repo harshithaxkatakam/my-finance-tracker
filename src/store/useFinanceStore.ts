@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { Transaction, Card, Loan, SalaryAllocation, CreditScore } from '../types';
 import { supabase } from '../lib/supabase';
+import { useUserStore } from '../store/userStore';
 
 interface FinanceState {
   transactions: Transaction[];
@@ -10,17 +11,17 @@ interface FinanceState {
   monthlySalary: number;
   creditScores: CreditScore[];
 
-  addTransaction: (transaction: Transaction, user_id: string) => Promise<void>;
-  fetchTransactions: (user_id: string) => Promise<void>;
-  addCard: (card: Card, user_id: string) => Promise<void>;
-  fetchCards: (user_id: string) => Promise<void>;
-  addLoan: (loan: Loan, user_id: string) => Promise<void>;
-  fetchLoans: (user_id: string) => Promise<void>;
-  updateSalaryAllocation: (allocations: SalaryAllocation[], user_id: string) => Promise<void>;
-  fetchSalaryAllocations: (user_id: string) => Promise<void>;
-  setSalary: (amount: number, user_id: string) => Promise<void>;
-  fetchCreditScores: (user_id: string) => Promise<void>;
-  updateCreditScore: (score: CreditScore, user_id: string) => Promise<void>;
+  addTransaction: (transaction: Transaction) => Promise<void>;
+  fetchTransactions: () => Promise<void>;
+  addCard: (card: Card) => Promise<void>;
+  fetchCards: () => Promise<void>;
+  addLoan: (loan: Loan) => Promise<void>;
+  fetchLoans: () => Promise<void>;
+  updateSalaryAllocation: (allocations: SalaryAllocation[]) => Promise<void>;
+  fetchSalaryAllocations: () => Promise<void>;
+  setSalary: (amount: number) => Promise<void>;
+  fetchCreditScores: () => Promise<void>;
+  updateCreditScore: (score: CreditScore) => Promise<void>;
 }
 
 export const useFinanceStore = create<FinanceState>((set) => ({
@@ -31,7 +32,8 @@ export const useFinanceStore = create<FinanceState>((set) => ({
   monthlySalary: 0,
   creditScores: [],
 
-  fetchTransactions: async (user_id) => {
+  fetchTransactions: async () => {
+    const { user_id } = useUserStore.getState();
     const { data, error } = await supabase.from('transactions').select('*').eq('user_id', user_id);
     if (error) {
       console.error('Error fetching transactions:', error);
@@ -40,16 +42,18 @@ export const useFinanceStore = create<FinanceState>((set) => ({
     }
   },
 
-  addTransaction: async (transaction, user_id) => {
+  addTransaction: async (transaction) => {
+    const { user_id } = useUserStore.getState();
     const { error } = await supabase.from('transactions').insert([{ ...transaction, user_id: user_id }]);
     if (error) {
       console.error('Error adding transaction:', error);
     } else {
-      await useFinanceStore.getState().fetchTransactions(user_id);
+      await useFinanceStore.getState().fetchTransactions();
     }
   },
 
-  fetchCards: async (user_id) => {
+  fetchCards: async () => {
+    const { user_id } = useUserStore.getState();
     const { data, error } = await supabase.from('cards').select('*').eq('user_id', user_id);
     if (error) {
       console.error('Error fetching cards:', error);
@@ -58,16 +62,18 @@ export const useFinanceStore = create<FinanceState>((set) => ({
     }
   },
 
-  addCard: async (card, user_id) => {
+  addCard: async (card) => {
+    const { user_id } = useUserStore.getState();
     const { error } = await supabase.from('cards').insert([{ ...card, user_id: user_id }]);
     if (error) {
       console.error('Error adding card:', error);
     } else {
-      await useFinanceStore.getState().fetchCards(user_id);
+      await useFinanceStore.getState().fetchCards();
     }
   },
 
-  fetchLoans: async (user_id) => {
+  fetchLoans: async () => {
+    const { user_id } = useUserStore.getState();
     const { data, error } = await supabase.from('loans').select('*').eq('user_id', user_id);
     if (error) {
       console.error('Error fetching loans:', error);
@@ -76,16 +82,18 @@ export const useFinanceStore = create<FinanceState>((set) => ({
     }
   },
 
-  addLoan: async (loan, user_id) => {
+  addLoan: async (loan) => {
+    const { user_id } = useUserStore.getState();
     const { error } = await supabase.from('loans').insert([{ ...loan, user_id: user_id }]);
     if (error) {
       console.error('Error adding loan:', error);
     } else {
-      await useFinanceStore.getState().fetchLoans(user_id);
+      await useFinanceStore.getState().fetchLoans();
     }
   },
 
-  fetchSalaryAllocations: async (user_id) => {
+  fetchSalaryAllocations: async () => {
+    const { user_id } = useUserStore.getState();
     const { data, error } = await supabase.from('salary_allocations').select('*').eq('user_id', user_id);
     if (error) {
       console.error('Error fetching salary allocations:', error);
@@ -94,16 +102,18 @@ export const useFinanceStore = create<FinanceState>((set) => ({
     }
   },
 
-  updateSalaryAllocation: async (allocations, user_id) => {
+  updateSalaryAllocation: async (allocations) => {
+    const { user_id } = useUserStore.getState();
     const { error } = await supabase.from('salary_allocations').upsert(allocations.map(a => ({ ...a, user_id: user_id })));
     if (error) {
       console.error('Error updating salary allocation:', error);
     } else {
-      await useFinanceStore.getState().fetchSalaryAllocations(user_id);
+      await useFinanceStore.getState().fetchSalaryAllocations();
     }
   },
 
-  setSalary: async (amount, user_id) => {
+  setSalary: async (amount) => {
+    const { user_id } = useUserStore.getState();
     const { error } = await supabase.from('salary').upsert({ amount, user_id: user_id });
     if (error) {
       console.error('Error updating salary:', error);
@@ -112,7 +122,8 @@ export const useFinanceStore = create<FinanceState>((set) => ({
     }
   },
 
-  fetchCreditScores: async (user_id) => {
+  fetchCreditScores: async () => {
+    const { user_id } = useUserStore.getState();
     const { data, error } = await supabase.from('credit_scores').select('*').eq('user_id', user_id);
     if (error) {
       console.error('Error fetching credit scores:', error);
@@ -121,16 +132,12 @@ export const useFinanceStore = create<FinanceState>((set) => ({
     }
   },
 
-  updateCreditScore: async (score, user_id) => {
-    if (!user_id) {
-      console.error('User not authenticated');
-      return;
-    }
-
+  updateCreditScore: async (score) => {
+    const { user_id } = useUserStore.getState();
     const { error } = await supabase.from('credit_scores').upsert({
       bureau: score.bureau,
       score: score.score,
-      user_id: "9288b8a0-bb4b-406a-a450-89040b10e269",
+      user_id: user_id,
       last_updated: new Date().toISOString(),
     },
       { onConflict: 'user_id,bureau' }
@@ -139,7 +146,7 @@ export const useFinanceStore = create<FinanceState>((set) => ({
     if (error) {
       console.error('Error updating credit score:', error);
     } else {
-      await useFinanceStore.getState().fetchCreditScores(user_id);
+      await useFinanceStore.getState().fetchCreditScores();
     }
   },
 }));

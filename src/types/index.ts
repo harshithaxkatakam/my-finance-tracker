@@ -26,7 +26,6 @@ export interface Card {
   last_four_digits: string;
   due_date?: number;
   credit_limit?: number;
-  user_id: string;
 }
 
 export interface Loan {
@@ -38,7 +37,6 @@ export interface Loan {
   due_date: number;
   start_date: Date;
   end_date: Date;
-  user_id: string;
 }
 
 export interface SalaryAllocation {
@@ -52,5 +50,4 @@ export interface CreditScore {
   bureau: 'TransUnion' | 'Experian' | 'Equifax';
   score: number;
   last_updated: Date;
-  user_id: string;
 }

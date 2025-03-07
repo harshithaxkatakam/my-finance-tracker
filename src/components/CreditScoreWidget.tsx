@@ -3,20 +3,14 @@ import { LineChart, AlertCircle } from 'lucide-react';
 import { useFinanceStore } from '../store/useFinanceStore';
 import { format } from 'date-fns';
 import type { CreditScore } from '../types';
-import { useUserStore } from '../store/userStore';
 
 const CreditScoreWidget: React.FC = () => {
   const { creditScores, fetchCreditScores, updateCreditScore } = useFinanceStore();
-  const { user_id, fetchUserId } = useUserStore();
   const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
-    if (!user_id) {
-      fetchUserId(); // Fetch user ID once and store it globally
-    } else {
-      fetchCreditScores(user_id); // Fetch credit scores when component mounts with user_id
-    }
-  }, [user_id, fetchUserId, fetchCreditScores]);
+    fetchCreditScores(); // Fetch credit scores when component mounts with user_id
+  }, [fetchCreditScores]);
 
   const getScoreColor = (score: number) => {
     if (score >= 740) return 'text-green-600';
@@ -35,17 +29,14 @@ const CreditScoreWidget: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!user_id) return; // Early return if no user_id
-
     const formData = new FormData(e.currentTarget);
     const score: CreditScore = {
       bureau: formData.get('bureau') as 'TransUnion' | 'Experian' | 'Equifax',
       score: parseInt(formData.get('score') as string, 10),
-      user_id,
       last_updated: new Date(),
     };
-    await updateCreditScore(score, user_id);
-    fetchCreditScores(user_id);
+    await updateCreditScore(score);
+    fetchCreditScores();
     setShowForm(false);
   };
 

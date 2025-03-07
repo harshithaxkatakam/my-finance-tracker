@@ -3,7 +3,6 @@ import { PlusCircle, CreditCard, Wallet } from 'lucide-react';
 import { useFinanceStore } from '../store/useFinanceStore';
 import { Card, Loan } from '../types';
 import { format } from 'date-fns';
-import { useUserStore } from '../store/userStore';
 
 const Cards: React.FC = () => {
   const { cards, loans } = useFinanceStore((state) => ({
@@ -11,43 +10,34 @@ const Cards: React.FC = () => {
     loans: state.loans,
   }));
   const { fetchCards, fetchLoans } = useFinanceStore();
-  const { user_id, fetchUserId } = useUserStore();
   const addCard = useFinanceStore((state) => state.addCard);
   const addLoan = useFinanceStore((state) => state.addLoan);
   const [showCardForm, setShowCardForm] = useState(false);
   const [showLoanForm, setShowLoanForm] = useState(false);
 
   useEffect(() => {
-    if (!user_id) {
-      fetchUserId();
-    } else {
-      fetchCards(user_id);
-      fetchLoans(user_id);
-    }
-  }, [user_id, fetchUserId, fetchCards]);
+      fetchCards();
+      fetchLoans();
+  }, []);
 
   const handleAddCard = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!user_id) return;
-
     const formData = new FormData(e.currentTarget);
     const card: Card = {
       id: crypto.randomUUID(),
-      user_id,
       name: formData.get('name') as string,
       type: formData.get('type') as 'credit' | 'debit',
       last_four_digits: formData.get('last_four_digits') as string,
       due_date: parseInt(formData.get('due_date') as string),
       credit_limit: formData.get('type') === 'credit' ? parseFloat(formData.get('credit_limit') as string) : undefined,
     };
-    addCard(card, user_id);
+    addCard(card);
     setShowCardForm(false);
   };
 
   const handleAddLoan = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    if (!user_id) return;
     const loan: Loan = {
       id: crypto.randomUUID(),
       name: formData.get('name') as string,
@@ -57,9 +47,8 @@ const Cards: React.FC = () => {
       due_date: parseInt(formData.get('due_date') as string),
       start_date: new Date(formData.get('start_date') as string),
       end_date: new Date(formData.get('end_date') as string),
-      user_id: user_id,
     };
-    addLoan(loan, user_id);
+    addLoan(loan);
     setShowLoanForm(false);
   };
 
