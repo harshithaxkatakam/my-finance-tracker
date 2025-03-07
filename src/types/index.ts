@@ -23,20 +23,22 @@ export interface Card {
   id: string;
   name: string;
   type: 'credit' | 'debit';
-  lastFourDigits: string;
-  dueDate?: number;
-  creditLimit?: number;
+  last_four_digits: string;
+  due_date?: number;
+  credit_limit?: number;
+  user_id: string;
 }
 
 export interface Loan {
   id: string;
   name: string;
-  totalAmount: number;
-  remainingAmount: number;
-  emiAmount: number;
-  dueDate: number;
-  startDate: Date;
-  endDate: Date;
+  total_amount: number;
+  remaining_amount: number;
+  emi_amount: number;
+  due_date: number;
+  start_date: Date;
+  end_date: Date;
+  user_id: string;
 }
 
 export interface SalaryAllocation {
@@ -49,5 +51,6 @@ export interface SalaryAllocation {
 export interface CreditScore {
   bureau: 'TransUnion' | 'Experian' | 'Equifax';
   score: number;
-  lastUpdated: Date;
+  last_updated: Date;
+  user_id: string;
 }
