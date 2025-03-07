@@ -1,48 +1,65 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { PlusCircle, CreditCard, Wallet } from 'lucide-react';
 import { useFinanceStore } from '../store/useFinanceStore';
 import { Card, Loan } from '../types';
 import { format } from 'date-fns';
+import { useUserStore } from '../store/userStore';
 
 const Cards: React.FC = () => {
   const { cards, loans } = useFinanceStore((state) => ({
     cards: state.cards,
     loans: state.loans,
   }));
+  const { fetchCards, fetchLoans } = useFinanceStore();
+  const { user_id, fetchUserId } = useUserStore();
   const addCard = useFinanceStore((state) => state.addCard);
   const addLoan = useFinanceStore((state) => state.addLoan);
   const [showCardForm, setShowCardForm] = useState(false);
   const [showLoanForm, setShowLoanForm] = useState(false);
 
+  useEffect(() => {
+    if (!user_id) {
+      fetchUserId();
+    } else {
+      fetchCards(user_id);
+      fetchLoans(user_id);
+    }
+  }, [user_id, fetchUserId, fetchCards]);
+
   const handleAddCard = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!user_id) return;
+
     const formData = new FormData(e.currentTarget);
     const card: Card = {
       id: crypto.randomUUID(),
+      user_id,
       name: formData.get('name') as string,
       type: formData.get('type') as 'credit' | 'debit',
-      lastFourDigits: formData.get('lastFourDigits') as string,
-      dueDate: parseInt(formData.get('dueDate') as string),
-      creditLimit: formData.get('type') === 'credit' ? parseFloat(formData.get('creditLimit') as string) : undefined,
+      last_four_digits: formData.get('last_four_digits') as string,
+      due_date: parseInt(formData.get('due_date') as string),
+      credit_limit: formData.get('type') === 'credit' ? parseFloat(formData.get('credit_limit') as string) : undefined,
     };
-    addCard(card);
+    addCard(card, user_id);
     setShowCardForm(false);
   };
 
   const handleAddLoan = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
+    if (!user_id) return;
     const loan: Loan = {
       id: crypto.randomUUID(),
       name: formData.get('name') as string,
-      totalAmount: parseFloat(formData.get('totalAmount') as string),
-      remainingAmount: parseFloat(formData.get('totalAmount') as string),
-      emiAmount: parseFloat(formData.get('emiAmount') as string),
-      dueDate: parseInt(formData.get('dueDate') as string),
-      startDate: new Date(formData.get('startDate') as string),
-      endDate: new Date(formData.get('endDate') as string),
+      total_amount: parseFloat(formData.get('total_amount') as string),
+      remaining_amount: parseFloat(formData.get('total_amount') as string),
+      emi_amount: parseFloat(formData.get('emi_amount') as string),
+      due_date: parseInt(formData.get('due_date') as string),
+      start_date: new Date(formData.get('start_date') as string),
+      end_date: new Date(formData.get('end_date') as string),
+      user_id: user_id,
     };
-    addLoan(loan);
+    addLoan(loan, user_id);
     setShowLoanForm(false);
   };
 
@@ -88,7 +105,7 @@ const Cards: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700">Last 4 Digits</label>
                 <input
                   type="text"
-                  name="lastFourDigits"
+                  name="last_four_digits"
                   required
                   pattern="[0-9]{4}"
                   maxLength={4}
@@ -99,7 +116,7 @@ const Cards: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700">Due Date</label>
                 <input
                   type="number"
-                  name="dueDate"
+                  name="due_date"
                   min="1"
                   max="31"
                   required
@@ -110,7 +127,7 @@ const Cards: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700">Credit Limit</label>
                 <input
                   type="number"
-                  name="creditLimit"
+                  name="credit_limit"
                   min="0"
                   step="0.01"
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
@@ -150,14 +167,14 @@ const Cards: React.FC = () => {
                 <div>
                   <h3 className="font-medium text-gray-900">{card.name}</h3>
                   <p className="text-sm text-gray-500">
-                    **** **** **** {card.lastFourDigits}
+                    **** **** **** {card.last_four_digits}
                   </p>
                 </div>
               </div>
               <div className="mt-4 text-sm text-gray-600">
-                <p>Due Date: {card.dueDate}</p>
-                {card.type === 'credit' && card.creditLimit && (
-                  <p>Credit Limit: ${card.creditLimit.toLocaleString()}</p>
+                <p>Due Date: {card.due_date}</p>
+                {card.type === 'credit' && card.credit_limit && (
+                  <p>Credit Limit: ${card.credit_limit.toLocaleString()}</p>
                 )}
               </div>
             </div>
@@ -194,7 +211,7 @@ const Cards: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700">Total Amount</label>
                 <input
                   type="number"
-                  name="totalAmount"
+                  name="total_amount"
                   min="0"
                   step="0.01"
                   required
@@ -205,7 +222,7 @@ const Cards: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700">EMI Amount</label>
                 <input
                   type="number"
-                  name="emiAmount"
+                  name="emi_amount"
                   min="0"
                   step="0.01"
                   required
@@ -216,7 +233,7 @@ const Cards: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700">Due Date</label>
                 <input
                   type="number"
-                  name="dueDate"
+                  name="due_date"
                   min="1"
                   max="31"
                   required
@@ -227,7 +244,7 @@ const Cards: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700">Start Date</label>
                 <input
                   type="date"
-                  name="startDate"
+                  name="start_date"
                   required
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                 />
@@ -236,7 +253,7 @@ const Cards: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700">End Date</label>
                 <input
                   type="date"
-                  name="endDate"
+                  name="end_date"
                   required
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                 />
@@ -268,11 +285,11 @@ const Cards: React.FC = () => {
             >
               <h3 className="font-medium text-gray-900">{loan.name}</h3>
               <div className="mt-2 space-y-1 text-sm text-gray-600">
-                <p>Total Amount: ${loan.totalAmount.toLocaleString()}</p>
-                <p>Remaining: ${loan.remainingAmount.toLocaleString()}</p>
-                <p>EMI Amount: ${loan.emiAmount.toLocaleString()}</p>
-                <p>Due Date: {loan.dueDate}</p>
-                <p>Period: {format(loan.startDate, 'MMM yyyy')} - {format(loan.endDate, 'MMM yyyy')}</p>
+                <p>Total Amount: ${loan.total_amount.toLocaleString()}</p>
+                <p>Remaining: ${loan.remaining_amount.toLocaleString()}</p>
+                <p>EMI Amount: ${loan.emi_amount.toLocaleString()}</p>
+                <p>Due Date: {loan.due_date}</p>
+                <p>Period: {format(loan.start_date, 'MMM yyyy')} - {format(loan.end_date, 'MMM yyyy')}</p>
               </div>
             </div>
           ))}
